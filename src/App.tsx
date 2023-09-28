@@ -1,35 +1,114 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import React, { useEffect, useState } from "react";
 import "./App.css";
+import { Book } from "./Book";
+import { IBook } from "./models";
+import axios from "axios";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [search, setSearch] = useState("");
+  const keyApi1 = "AIzaSyAWXUr33PRKRXXG4yFt0fvgALVcgXABHn8";
+  const keyApi2 = "AIzaSyDPG9XRUg6u_g6zzkGibtZ3n6wrxhzTKbU";
+  const [offset, setOffset] = useState(0);
+  const [loadedBooks, setLoadedBooks] = useState<IBook[]>([]);
+  const [hasMoreBooks, setHasMoreBooks] = useState(true);
+  const [noBooksFound, setNoBooksFound] = useState(false);
+
+  const searchBook = (evt: React.KeyboardEvent<HTMLInputElement>) => {
+    if (evt.key === "Enter" && search != "") {
+      setOffset(0);
+      setHasMoreBooks(true);
+      setNoBooksFound(false);
+      setLoadedBooks([]);
+      try {
+        axios
+          .get(
+            `https://www.googleapis.com/books/v1/volumes?q=intitle:${search}&key=${keyApi2}&startIndex=${offset}&maxResults=40`,
+          )
+          .then((response) => {
+            setLoadedBooks(response.data.items);
+            console.log(response.data.totalItems);
+            console.log(response.data.items);
+            if (response.data.totalItems <= offset + 40) {
+              setHasMoreBooks(false);
+            }
+            if (response.data.totalItems === 0) {
+              setNoBooksFound(true);
+            }
+          });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    console.log(noBooksFound);
+  };
+
+  const loadMoreBook = () => {
+    try {
+      axios
+        .get(
+          `https://www.googleapis.com/books/v1/volumes?q=intitle:${search}&key=${keyApi2}&startIndex=${offset}&maxResults=40`,
+        )
+        .then((response) => {
+          const newBooks = response.data.items.filter(
+            (book: IBook) =>
+              !loadedBooks.some((loadedBook) => loadedBook.id === book.id),
+          );
+          setLoadedBooks((prevBooks) => [...prevBooks, ...newBooks]);
+          setOffset((prevOffset) => prevOffset + 40);
+          console.log(response.data.items);
+          if (response.data.totalItems <= offset + 40) {
+            setHasMoreBooks(false);
+          }
+        });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleScroll = (e: any) => {
+    if (
+      window.innerHeight + e.target.documentElement.scrollTop + 1 >=
+        e.target.documentElement.scrollHeight &&
+      hasMoreBooks
+    ) {
+      loadMoreBook();
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [loadedBooks, hasMoreBooks]);
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="navbar">
+        <ul>
+          <li>{/* <img src={"./books.png"} alt="эмблема" /> */}</li>
+          <li>
+            <div className="title"> Книжная лавка</div>
+          </li>
+          <li>
+            <input
+              type="text"
+              placeholder="Введите название или автора книги"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyUp={searchBook}
+            />
+          </li>
+        </ul>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      <div className="container">
+        {noBooksFound ? (
+          <div className="noBooksFound">Книги не найдены</div>
+        ) : (
+          loadedBooks.map((book) => <Book book={book} key={book.id} />)
+        )}
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   );
 }
-
 export default App;
