@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Book } from "../Book";
 import { IBook } from "../models";
+import { useNavigate } from "react-router-dom";
 
 function Favourites() {
   const [loadedBooks, setLoadedBooks] = useState<IBook[]>([]);
@@ -19,8 +20,16 @@ function Favourites() {
     loadFavBooks();
   }, []);
 
+  const navigate = useNavigate();
+  const onClick = () => {
+    navigate(-1);
+  };
+
   return (
     <>
+      <div className="goBack" onClick={onClick}>
+        🢀
+      </div>
       <div className="container">
         {noFavBooks ? (
           <div className="noBooksFound">Вы ничего не добавили в избранное</div>

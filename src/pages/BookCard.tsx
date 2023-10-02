@@ -21,7 +21,7 @@ function BookCard() {
     const urlParams = new URLSearchParams(queryString);
     const id = urlParams.get("id");
     console.log(id);
-
+    /////////
     axios
       .get(`https://www.googleapis.com/books/v1/volumes/${id}`)
       .then((response) => {
@@ -31,8 +31,13 @@ function BookCard() {
 
   const navigate = useNavigate();
   const onClick = () => {
-    navigate(`/`);
+    navigate(-1);
   };
+  useEffect(() => {
+    // Проверка наличия книги в списке избранных
+    const isFavorite = favoriteBooks.some((book) => book.id === loadedBook?.id);
+    setFavorite(isFavorite);
+  }, [favoriteBooks, loadedBook]);
 
   const onClickFav = () => {
     if (favorite && loadedBook !== undefined) {
@@ -63,20 +68,37 @@ function BookCard() {
 
   return (
     <>
-      <button className="goToHome" onClick={onClick}>
-        Назад
-      </button>
+      <div className="goBack" onClick={onClick}>
+        🢀
+      </div>
       <div className="book-card">
-        <button className="btn-fav" onClick={onClickFav}>
-          ♥
+        <div className="book-card-image">
+          <img src={loadedBook?.volumeInfo.imageLinks.thumbnail}></img>
+        </div>
+        <div className="book-card-info">
+          <h2 className="book-title">
+            Название<br></br>
+            {loadedBook?.volumeInfo.title}
+          </h2>
+          <p className="book-author">
+            Автор/авторы<br></br>
+            {loadedBook?.volumeInfo.authors}
+          </p>
+          <p className="book-publisher">
+            Кем опубликовано<br></br>
+            {loadedBook?.volumeInfo.publisher}
+          </p>
+          <p className="book-publishedDate">
+            Дата публикации<br></br>
+            {loadedBook?.volumeInfo.publishedDate}
+          </p>
+        </div>
+        <button
+          className={`btn-fav ${favorite ? "btn-fav--favorite" : ""}`}
+          onClick={onClickFav}
+        >
+          ❤
         </button>
-        <img src={loadedBook?.volumeInfo.imageLinks.smallThumbnail}></img>
-        <h2 className="book-title">{loadedBook?.volumeInfo.title}</h2>
-        <p className="book-author">{loadedBook?.volumeInfo.authors}</p>
-        <p className="book-publisher">{loadedBook?.volumeInfo.publisher}</p>
-        <p className="book-publishedDate">
-          {loadedBook?.volumeInfo.publishedDate}
-        </p>
       </div>
     </>
   );

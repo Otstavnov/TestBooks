@@ -25,11 +25,10 @@ function App() {
       <div className="navbar">
         <ul>
           <li>
-            <div className="title"> Книжная лавка</div>
+            <div className="titleApp">Тестовое задание</div>
           </li>
           <li>
-            <div className="title" onClick={onClick}>
-              {" "}
+            <div className="navFav" onClick={onClick}>
               Избранное
             </div>
           </li>
